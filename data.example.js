@@ -32,7 +32,7 @@ window.BATTLE_DATA = (function () {
   };
 
   /* -- the map box (REAL WGS84 lng/lat) + the clock window + identity.
-   *    meta.geo MUST match the bbox in tools/fetch_tiles (one place; the fetcher reads it).
+   *    meta.geo IS the map box and the single source of truth: tools/fetch_tiles reads it directly (no box to set there).
    *    `Z` is the tile zoom (13 is a good default). day keys below live in [dayMin..dayMax]. */
   const meta = {
     geo:{ minLng:9.00, maxLng:9.14, minLat:44.32, maxLat:44.43, Z:13 },   // example: a small coastal/hill area — REPLACE with your battle's box
