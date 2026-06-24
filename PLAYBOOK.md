@@ -77,11 +77,19 @@ the day/night and weather all carry over.
 - Do not leak build/process names in `.gitignore` or comments.
 
 ## Capturing real screenshots / GIFs
-Press **P** in the running app to save the current 3D view as a PNG — built in, no dependencies (the renderer keeps its
-drawing buffer). Size the browser window to your target ratio first (e.g. ~1200x630 for an `og:image`). The capture is
-the clean 3D scene (terrain, units, flags, arrows, lines); the place-name labels and the HUD are DOM overlays, not in
-the canvas. For a fully composited still (with captions) or a GIF, screen-record the auto-playing tour and convert with
-ffmpeg or an online tool.
+Press **P** in the running app to save the current 3D view as a PNG (built in, no dependencies): a quick HUMAN still of
+the clean 3D scene only (terrain, units, flags, arrows, lines), since the place-name labels and the HUD are DOM
+overlays, not in the canvas. Size the window to your target ratio first (e.g. ~1200x630 for an `og:image`).
+
+**Headless / agent capture (the composited HUD + caption, no screen to record).** Serve the app and open it with
+`?capture=1`. That exposes a small `window.__capture` API and freezes the loop on a settled frame:
+- `window.__capture.seekToShot(n)` jumps deterministically to storyboard shot `n`.
+- `window.__capture.composite(true)` returns a COMPOSITED still (the 3D scene PLUS the HUD and caption) as a JPEG data
+  URL. This is what the `docs/og.jpg` convention wants.
+- `window.__capture.step(n)` advances `n` frames, so you can grab a sequence for a GIF.
+
+Wrap it in a headless driver (Puppeteer/Playwright) to open `?capture=1`, call these, write the data URLs to files, and
+run ffmpeg for the GIF. The driver and ffmpeg are OPTIONAL external tools, not engine dependencies.
 
 ## Deploy
 - **Run it locally:** clone the repo, fetch the tiles (`node tools/fetch_tiles.mjs`), then `node tools/serve.js` and open <http://localhost:5050>. Serve over http, not `file://`, so the ES modules load.

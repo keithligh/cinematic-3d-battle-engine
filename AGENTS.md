@@ -84,9 +84,13 @@ Edit only the **battle layer**; never the engine.
    The human then plays the tour and checks what the CLI cannot: units move the right way, the front line and arrows
    make sense, captions and dates align, the camera framing is cinematic and close, nothing reads "undefined". Fix in
    `data.js`, re-validate, reload.
-9. **Capture** a still for the README / `og:image`: press **P** in the running app to download the current 3D view as a
-   PNG (built in, no dependencies). Size the window to your target ratio first. For a GIF, screen-record the
-   auto-playing tour. See PLAYBOOK.md → "Capturing real screenshots / GIFs".
+9. **Capture** a still for the README / `og:image`. The **P** key saves a quick still of the 3D scene only (the HUD and
+   labels are DOM, not in the canvas). For the composited HUD + caption the convention assets want (and on the agent
+   path, where there is no screen to record), serve the app and open it with `?capture=1`: that exposes a small
+   `window.__capture` API on a frozen, settled frame. Drive it: `seekToShot(n)` then `composite(true)` returns the
+   composited still as a JPEG data URL; `step(n)` + `composite` per frame gives a GIF sequence (then ffmpeg). A headless
+   driver (Puppeteer/Playwright) and ffmpeg are optional external tools, not engine dependencies. Full recipe:
+   PLAYBOOK.md → "Capturing real screenshots / GIFs".
 
 ---
 
