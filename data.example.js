@@ -17,6 +17,8 @@
  *
  *  GOLDEN RULE: history must be SOURCED, never invented. notes.sources is required;
  *  the engine will not start without it. (Here it is honestly marked as example data.)
+ *  Fictional-but-canon subjects are fine too (the engine ships a fictional demo): cite the
+ *  canon as your sources and disclose any stand-ins in caveats. See AGENTS.md.
  * ===================================================================== */
 window.BATTLE_DATA = (function () {
 
@@ -42,7 +44,10 @@ window.BATTLE_DATA = (function () {
 
   // -- ui is OPTIONAL: omit it and every engine-rendered string defaults to English. Provide it to translate them.
 
-  /* -- intro: the opening title card + its establishing camera. ----------------- */
+  /* -- intro: the opening title card + its establishing camera.
+   *    cam.dist is in WORLD UNITS (the whole bbox is 2000 units wide), so a shot frames roughly
+   *    bbox-width x dist/4800: ~1200 is a close action shot (a quarter of the box), ~2400 a wide
+   *    establisher. Scale dist to your bbox, not a fixed number. --------------------- */
   const intro = { title_zh:"Example Battle", title_en:"Example Battle",
     sub_zh:"A skeleton scenario — replace with your own", sub_en:"A skeleton scenario — replace with your own",
     cam:{ lng:9.07, lat:44.37, dist:2200, az:0, el:52 } };
