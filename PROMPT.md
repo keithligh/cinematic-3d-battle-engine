@@ -18,8 +18,9 @@ accuracy); never present invention as real history.
 Set the map bounding box (meta.geo) over the action, then fetch the terrain and imagery tiles
 (node tools/fetch_tiles.mjs). Author data.js: the forces, each unit's dated movement track, the front lines, the
 storyboard of camera shots, the bilingual narration, and each side's period-correct flag (the real flag for the year,
-never a prohibited symbol). Validate with node tools/validate.mjs after every pass and watch it in the browser
-(node tools/serve.js). Keep the present-day-imagery disclaimer. Leave the engine and author credit visible (the footer
+never a prohibited symbol). Direct the storyboard cinematically, like a TV documentary: keep the camera close
+enough that the audience can read the action on the ground, never a far-out view of the whole map. Validate with
+node tools/validate.mjs after every pass; it exits and names the first wrong field. Keep the present-day-imagery disclaimer. Leave the engine and author credit visible (the footer
 and upper-left credits) as good will; add your own name alongside it rather than removing it.
 ```
 

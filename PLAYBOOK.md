@@ -35,7 +35,7 @@ the day/night and weather all carry over.
 ## Build sequence
 1. Set `meta.geo` (data.js) to your battle's map box — the ONE place the box is defined (the fetcher reads it).
 2. `node tools/fetch_tiles.mjs` (cross-platform; or `pwsh tools/fetch_tiles.ps1`) downloads that box's elevation + satellite tiles into `lib/tiles/`. Add `--dry` to preview the tile count first. Global coverage, no account, no API key.
-3. `node tools/serve.js`, then open <http://localhost:5050>. It must be served over http, not opened as `file://`.
+3. `node tools/serve.js` (a long-running server; if an agent runs it, background it and do not block on it), then open <http://localhost:5050>. It must be served over http, not opened as `file://`.
 4. Author the battle: copy **`data.example.js`** → `data.js` and fill it in (the bulk). Then `flags.js` (the flag art). Then the `index.html` branding.
 5. **Validate as you go:** `node tools/validate.mjs` checks `data.js` against the engine's contract and names the first wrong/missing field — no browser needed. Iterate until it prints `OK`, then watch the tour in the browser. Also run `node tools/check-agnostic.mjs` to confirm the engine + the page `<body>` stayed battle-agnostic (it fails, naming the spot, if hardcoded battle text leaked outside `data.js`/`flags.js`/the `<head>`).
 
@@ -59,7 +59,7 @@ the day/night and weather all carry over.
 - `fronts[]` *(optional)* : dated front-line polylines, each `{ d, path:[[lng,lat],…] }`.
 - `hotspots[]` *(optional)* : dated combat FX, each `{ a, b, kind, lng, lat, i }` (active days `a`→`b`; `kind` ∈ `firefight|artillery|explosion|landing|air|oilfire`; `i` = intensity 0..1).
 - `weather[]` *(optional)* : per-day `{ d, night, fog, rain, smoke }` (each 0..1; absent → a clear, dry day).
-- `storyboard[]` : the directed shots, each `{ day, hold, cam:{lng,lat,dist,az,el,orbit}, title_zh, title_en, dateLabel, narration_zh?, narration_en?, side?, focus?:[ids], commanders?:[{zh,en}] }`.
+- `storyboard[]` : the directed shots, each `{ day, hold, cam:{lng,lat,dist,az,el,orbit}, title_zh, title_en, dateLabel, narration_zh?, narration_en?, side?, focus?:[ids], commanders?:[{zh,en}] }`. **Direct it like a TV documentary:** keep `cam.dist` close enough that the audience can read the action (the focused units, the arrows, the terrain); a far-out view of the whole map reads as an empty map where nothing is legible. Zoom in on each shot's `focus`.
 - `notes` : `{ summary, caveats:[…], sources }` — **REQUIRED**, and `sources` must be non-empty. History must be sourced, never fabricated; the validator refuses to boot a battle with no sources.
 
 ## The rules learned the hard way

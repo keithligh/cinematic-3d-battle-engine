@@ -79,9 +79,11 @@ Edit only the **battle layer**; never the engine.
 7. **Validate — constantly.** Run `node tools/validate.mjs` after each authoring pass. It checks `data.js` against the
    exact contract the engine enforces at boot and **names the first wrong or missing field** — no browser, no tiles
    needed. Iterate until it prints `OK ... valid`. This is your tight inner loop.
-8. **Serve and watch.** `node tools/serve.js`, then open <http://localhost:5050> (must be http, not `file://`). Play the
-   whole tour and check: units move the right way, the front line and arrows make sense, captions and dates align,
-   nothing reads "undefined". Fix in `data.js`, re-validate, reload.
+8. **Serve for the human to review.** `node tools/serve.js` runs a local server at <http://localhost:5050> (http, not
+   `file://`). It is long-running and does not exit, so start it in the background; never block the agent waiting on it.
+   The human then plays the tour and checks what the CLI cannot: units move the right way, the front line and arrows
+   make sense, captions and dates align, the camera framing is cinematic and close, nothing reads "undefined". Fix in
+   `data.js`, re-validate, reload.
 9. **Capture** a still for the README / `og:image`: press **P** in the running app to download the current 3D view as a
    PNG (built in, no dependencies). Size the window to your target ratio first. For a GIF, screen-record the
    auto-playing tour. See PLAYBOOK.md → "Capturing real screenshots / GIFs".
