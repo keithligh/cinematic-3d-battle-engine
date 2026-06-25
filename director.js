@@ -150,6 +150,9 @@ export function buildChrome(){
     h+=`<details class="syms"><summary>${L.symbolsHeader}</summary>`
      + `<div class="row"><span class="gl" style="color:var(--fac-${att})">➤</span><span>${L.advance}</span></div>`
      + `<div class="row"><span class="gl">◆</span><span>${L.hq}</span></div>`
+     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><path d="M8 1.5 L13.5 14 L8 10.8 L2.5 14 Z" fill="currentColor"/></svg></span><span>${L.air}</span></div>`
+     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><path d="M8 2.5 L12 6 V12 H4 V6 Z" fill="currentColor"/></svg></span><span>${L.navy}</span></div>`
+     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><rect x="3.5" y="8.5" width="9" height="4.5" fill="currentColor"/><rect x="7" y="2" width="2" height="7" fill="currentColor"/></svg></span><span>${L.artillery}</span></div>`
      + `<div class="row"><span class="gl">◎</span><span>${L.contact}</span></div>`
      + `<div class="row"><span class="gl mini"><i></i></span><span>${L.strength}</span></div>`
      + `<div class="row"><span class="gl">→</span><span>${L.movement}</span></div>`
