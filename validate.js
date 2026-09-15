@@ -134,6 +134,36 @@ export function validateBattleData(d){
         if(!str(ln.color)) errs.push(`${at}.color (css colour string) is missing`); }); }
   }
 
+  /* ---- map-box margin: anything ON THE GROUND must sit clear of the sunk edge band ----
+   * terrain.js:103 sinks the outer band below sea level (`smooth(0.05,0,…)`) so the map has no
+   * floating-slab edge, while unit markers clamp to sea level — so a coordinate inside that band
+   * hovers over a void. That renders as silent garbage, which is exactly what this file exists to
+   * refuse. EDGE_BAND mirrors terrain.js's 0.05: above it `smooth` returns exactly 0 and nothing is
+   * sunk, so a stricter threshold would reject battles that render perfectly. PLAYBOOK recommends
+   * >8% as an authoring cushion; that stays advice, and only the real defect fails here.
+   * CAMERAS ARE EXCLUDED on purpose (intro/outro/storyboard cam): they are viewpoints, not markers,
+   * and framing a shot from outside the box is legitimate. */
+  const EDGE_BAND = 0.05;
+  const gm = m && m.geo;
+  if(gm && num(gm.minLng) && num(gm.maxLng) && num(gm.minLat) && num(gm.maxLat)){   // guard: a broken box reports itself, without a flood of derived errors
+    const W=gm.maxLng-gm.minLng, H=gm.maxLat-gm.minLat;
+    const ground=[];
+    const place=(lng,lat,at)=>{ if(num(lng)&&num(lat)) ground.push([lng,lat,at]); };
+    const path=(p,at)=>{ if(Array.isArray(p)) p.forEach((q,i)=>{ if(pair(q)) place(q[0],q[1],`${at}[${i}]`); }); };
+    if(Array.isArray(d.units)) d.units.forEach((u,i)=>{ if(u&&Array.isArray(u.track)) u.track.forEach((kf,j)=>{ if(kf) place(kf.lng,kf.lat,`units[${i}]${u.id?` ("${u.id}")`:""}.track[${j}]`); }); });
+    if(Array.isArray(d.arrows)) d.arrows.forEach((a,i)=>{ if(!a) return; if(pair(a.from)) place(a.from[0],a.from[1],`arrows[${i}].from`); if(pair(a.to)) place(a.to[0],a.to[1],`arrows[${i}].to`); });
+    if(Array.isArray(d.fronts)) d.fronts.forEach((fr,i)=>{ if(fr) path(fr.path,`fronts[${i}].path`); });
+    if(Array.isArray(d.hotspots)) d.hotspots.forEach((h,i)=>{ if(h) place(h.lng,h.lat,`hotspots[${i}]`); });
+    if(geo && typeof geo==="object"){
+      for(const k of ["regions","points"]) if(Array.isArray(geo[k])) geo[k].forEach((p,i)=>{ if(p) place(p.lng,p.lat,`geography.${k}[${i}]${p.name_en?` ("${p.name_en}")`:""}`); });
+      if(Array.isArray(geo.lines)) geo.lines.forEach((ln,i)=>{ if(ln) path(ln.path,`geography.lines[${i}].path`); });
+    }
+    if(W>0 && H>0) for(const [lng,lat,at] of ground){
+      const inset=Math.min((lng-gm.minLng)/W,(gm.maxLng-lng)/W,(lat-gm.minLat)/H,(gm.maxLat-lat)/H);
+      if(inset<EDGE_BAND) errs.push(`${at} sits ${(inset*100).toFixed(1)}% inside the map box — the engine sinks the outer ${EDGE_BAND*100}% below sea level, so it would float over the receded terrain. Widen meta.geo or move the coordinate (aim for >8% inside every edge).`);
+    }
+  }
+
   /* ---- optional scenario arrays — absent is fine (engine guards them); validated if present ---- */
   if(d.fronts!=null){ if(!Array.isArray(d.fronts)) errs.push("fronts must be an array");
     else d.fronts.forEach((fr,i)=>{ const at=`fronts[${i}]`;

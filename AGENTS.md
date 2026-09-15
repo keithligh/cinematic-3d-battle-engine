@@ -58,6 +58,11 @@ Edit only the **battle layer**; never the engine.
 1. **Research first.** Produce a sourced brief: date window, sides + forces + commanders, geography (named places with
    real lng/lat), the hour-by-hour or day-by-day sequence, and the source list. Do not start authoring until this exists.
 2. **Set the map box.** Pick `meta.geo` (`minLng/maxLng/minLat/maxLat/Z`) covering the action, in `data.js`.
+   **Leave edge margin.** The engine sinks the outer 5% of the box below sea level (so the map has no raw slab
+   edge) while unit markers clamp to sea level, so anything placed in that band floats over receded terrain.
+   `node tools/validate.mjs` **enforces this**: it refuses any unit, arrow, front, place label or hotspot inside
+   the 5% band and names it. Aim for **>8% inside every edge** to leave yourself room. Cameras are exempt, since
+   framing a shot from outside the box is fine.
 3. **Fetch the terrain + imagery tiles** for that box: `node tools/fetch_tiles.mjs` (cross-platform; add `--dry` to
    preview the tile count first). It reads the box from `meta.geo` — one source. Tiles come from two global, key-less
    providers, so any land region works; they are not committed (each fork fetches its own).
