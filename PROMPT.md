@@ -27,3 +27,8 @@ and upper-left credits) as good will; add your own name alongside it rather than
 The brief above is short because the engine already exists: you are authoring a battle, not building a renderer. Spend
 the length you save on the history instead, since the research and the narration are what make the result worth
 watching.
+
+It was not always this short. This engine was extracted from
+**[The Battle of Hong Kong, 1941](https://github.com/keithligh/battle-of-hong-kong-1941)**, which had to be built from
+a single from-scratch brief before any engine existed. You are starting where that ended. You do not need to read it:
+everything your agent needs ships in this repository.

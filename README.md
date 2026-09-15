@@ -31,10 +31,11 @@ change from one battle to the next. **Every frame is the live engine. Nothing is
 no API keys: one folder of static files that runs in any browser.
 
 The repo ships a **complete fictional "Example Battle"** so it plays itself the moment you clone it: a coastal assault
-where Blue Force lands from the sea and drives inland against Red Force, on the real terrain of the Italian coast. The
-same engine already carries two finished documentaries end to end:
-**[The Battle of Hong Kong, 1941](https://github.com/keithligh/battle-of-hong-kong-1941)** and
-**[D-Day: The Normandy Landings, 1944](https://github.com/keithligh/d-day-normandy-1944)**.
+where Blue Force lands from the sea and drives inland against Red Force, on the real terrain of the Italian coast.
+
+This engine was extracted from **[The Battle of Hong Kong, 1941](https://github.com/keithligh/battle-of-hong-kong-1941)**,
+and **[D-Day: The Normandy Landings, 1944](https://github.com/keithligh/d-day-normandy-1944)** was then built on it.
+All three are **separate, independent repositories that share no code** ([more below](#where-it-came-from-and-what-it-makes)).
 
 ## Highlights
 
@@ -94,7 +95,16 @@ You do not have to know any of this, but it is why an AI can build a whole docum
 
 ## How it was built
 
-This engine was built through **agentic engineering**: it started from an initial prompt and was engineered, pass by pass, into a reusable, battle-agnostic system. The interesting part is not the AI, it is the architecture and the judgment around it. To build a battle of your own on top of it, [just ask an AI](#build-your-own-just-ask-an-ai).
+This engine was **extracted from a finished documentary**, not designed in the abstract. It began as
+**[The Battle of Hong Kong, 1941](https://github.com/keithligh/battle-of-hong-kong-1941)**, built from a single
+from-scratch brief before any engine existed. Everything battle-specific was then pulled out of it, pass by pass,
+until what remained named no battle, no faction and no language, and read all of it from data. **[D-Day: The Normandy
+Landings, 1944](https://github.com/keithligh/d-day-normandy-1944)** was then built on the result, which is what proved
+the extraction worked: a completely different battle, in a different language pair, on different terrain, with the
+engine untouched.
+
+That is agentic engineering, and the interesting part is not the AI but the architecture and the judgment around it.
+To build a battle of your own on top of it, [just ask an AI](#build-your-own-just-ask-an-ai).
 
 ## Licensing
 
@@ -109,12 +119,18 @@ This engine was built through **agentic engineering**: it started from an initia
 - Elevation: **SRTM, courtesy U.S. Geological Survey** via AWS Terrain Tiles.
 - 3D engine: **Three.js** (MIT).
 
-## Built two documentaries already
+## Where it came from, and what it makes
 
-The engine is proven on real history. See it carry a full campaign end to end:
+Two finished documentaries stand either side of this engine, and they play different roles:
 
-- **[The Battle of Hong Kong, 1941](https://github.com/keithligh/battle-of-hong-kong-1941)** ([live](https://keithligh.github.io/battle-of-hong-kong-1941/)): the 18-day battle on the real terrain of Hong Kong, in 中文 and English.
-- **[D-Day: The Normandy Landings, 1944](https://github.com/keithligh/d-day-normandy-1944)** ([live](https://keithligh.github.io/d-day-normandy-1944/)): the 6 June 1944 assault on the Normandy coast, with the Allied and Wehrmacht (Iron Cross / Balkenkreuz) insignia of the day.
+- **The origin.** **[The Battle of Hong Kong, 1941](https://github.com/keithligh/battle-of-hong-kong-1941)** ([live](https://keithligh.github.io/battle-of-hong-kong-1941/)): the 18-day battle on the real terrain of Hong Kong, in 中文 and English. This came **first**, and this engine is what was extracted from it.
+- **The proof.** **[D-Day: The Normandy Landings, 1944](https://github.com/keithligh/d-day-normandy-1944)** ([live](https://keithligh.github.io/d-day-normandy-1944/)): the 6 June 1944 assault on the Normandy coast, with the Allied and Wehrmacht (Iron Cross / Balkenkreuz) insignia of the day. This was built **on** the finished engine, and is the kind of thing you can make with it.
+
+**They are three separate repositories, and they share no code.** Nothing here imports them and nothing in them
+imports this: no submodule, no package, no dependency of any kind. Each one clones, fetches its own tiles and runs on
+its own, and each is free to diverge. The engine in this repository names no battle at all, which is exactly why the
+same files can render Hong Kong, Normandy, or yours. Your battle will be independent in the same way: your own
+repository, owing nothing to this one once you have it.
 
 ## Security
 
