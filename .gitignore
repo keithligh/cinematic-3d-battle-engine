@@ -9,3 +9,23 @@ deploy/
 Thumbs.db
 *.log
 node_modules/
+
+# Local tool, editor and workspace state.
+.claude/
+.vscode/
+.idea/
+
+# Scratch. Anything prefixed with "_" is a local working file by convention
+# (capture rigs, throwaway servers, test pages) and is never part of a release.
+_*
+
+# Documentation: only these files ship. Everything else at the top level is
+# ignored by default, so local notes and working drafts cannot be published by
+# accident. Adding a new public document means adding it to this list.
+/*.md
+!/README.md
+!/AGENTS.md
+!/PLAYBOOK.md
+!/PROMPT.md
+!/SECURITY.md
+!/THIRD_PARTY_NOTICES.md
