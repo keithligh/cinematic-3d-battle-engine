@@ -77,7 +77,26 @@ the day/night and weather all carry over.
 - **Honour the engine credit (good will).** The movie ships a small credit to the engine and its author (`#credit` + `#engine-credit`). The licence lets you remove it; we ask that you keep it visible and add your own name alongside it. The engine is free and open, and leaving the credit is how the favour is returned. See AGENTS.md.
 - Do not leak build/process names in `.gitignore` or comments.
 
-## Capturing real screenshots / GIFs
+## Reviewing your own render (agents: this is step 8, and it is yours)
+Serve the battle, then open **`?capture=1&selfreview=1`** once. The app drives its own tour, renders every storyboard
+shot, and writes to **`_selfreview/`** (gitignored, so it can never be committed):
+
+| File | What it is |
+|---|---|
+| `shot-NN.jpg` | one composited frame per storyboard shot, HUD and caption included |
+| `report.json` | `frames[]` (shot, day, title, file) and `issues[]` |
+| `done.json` | written **last**; wait for it rather than guessing at timing |
+
+`issues[]` carries only what can be stated mechanically: text rendering as `undefined`/`NaN`/`null`, a
+`storyboard[].focus` id matching no unit (the shot then centres on nothing, silently), a shot `day` outside
+`meta.dayMin..dayMax`, and HUD panels overlapping at the current viewport. It deliberately under-reports rather than
+guess, so **an empty `issues` list does not mean the battle is good.**
+
+**The frames are the point.** Open them and judge what no check can: is the camera close enough to read the action, do
+the front line and arrows make sense, do the captions and dates align, does the story read. Fix `data.js`, re-validate,
+re-run. No headless driver, no dependency, no human in the loop.
+
+## Capturing stills / GIFs by hand
 Press **P** in the running app to save the current 3D view as a PNG (built in, no dependencies): a quick HUMAN still of
 the clean 3D scene only (terrain, units, flags, arrows, lines), since the place-name labels and the HUD are DOM
 overlays, not in the canvas. Size the window to your target ratio first (e.g. ~1200x630 for an `og:image`).

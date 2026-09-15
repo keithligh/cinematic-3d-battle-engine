@@ -12,8 +12,34 @@ const types = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; char
   ".css":"text/css; charset=utf-8", ".json":"application/json; charset=utf-8",
   ".png":"image/png", ".jpg":"image/jpeg", ".svg":"image/svg+xml", ".mp3":"audio/mpeg" };
 
+// The SELF-REVIEW sink. The app (?capture=1&selfreview=1) renders every storyboard shot and POSTs
+// the frames + a diagnostic report here, so an AI agent building a battle can OPEN ITS OWN RENDER
+// and judge it, with no headless driver and no dependency to install. Deliberately narrow, because
+// this file ships: POST only, one fixed prefix, a filename with no path separators, a containment
+// check against the output dir, and a size cap. Everything else is refused.
+const SELF_DIR = path.join(root, "_selfreview");           // "_" prefix => gitignored, can never be committed
+const SELF_PREFIX = "/__selfreview/";
+const SELF_MAX = 32 * 1024 * 1024;                          // one composited frame is ~0.5MB; this is a runaway stop, not a limit
+function selfReviewSink(req, res, name) {
+  if (req.method !== "POST") { res.writeHead(405); res.end("method not allowed"); return; }
+  if (!/^[a-z0-9._-]+$/i.test(name)) { res.writeHead(400); res.end("bad name"); return; }
+  const fp = path.join(SELF_DIR, name);
+  const rel = path.relative(SELF_DIR, fp);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) { res.writeHead(403); res.end("forbidden"); return; }
+  const chunks = []; let size = 0, killed = false;
+  req.on("data", c => { size += c.length; if (size > SELF_MAX) { killed = true; res.writeHead(413); res.end("too large"); req.destroy(); return; } chunks.push(c); });
+  req.on("end", () => {
+    if (killed) return;
+    try { fs.mkdirSync(SELF_DIR, { recursive: true }); fs.writeFileSync(fp, Buffer.concat(chunks)); }
+    catch (e) { res.writeHead(500); res.end("write failed: " + e.message); return; }
+    res.writeHead(200, { "content-type": "text/plain" }); res.end("ok");
+  });
+}
+
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split("?")[0]);
+  if (p.startsWith(SELF_PREFIX)) { selfReviewSink(req, res, p.slice(SELF_PREFIX.length)); return; }
+  if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405); res.end("method not allowed"); return; }
   if (p === "/") p = "/index.html";
   const fp = path.join(root, p);
   const rel = path.relative(root, fp); if (rel.startsWith("..") || path.isAbsolute(rel)) { res.writeHead(403); res.end("forbidden"); return; }

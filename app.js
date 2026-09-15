@@ -124,7 +124,56 @@ if(/[?&]capture=1\b/.test(location.search)){
     step(n=1,dt=1/30){ captureFrozen=true; for(let k=0;k<n;k++) frame(dt); renderScene(); return +Clock.day.toFixed(2); },
     freeze(){ captureFrozen=true; }, play(){ captureFrozen=false; },
     composite:compositeCapture,
+    selfReview,
   };
+}
+
+/* ---- SELF-REVIEW: the app renders every shot and posts the frames + a report to tools/serve.js,
+ * so the AI agent BUILDING the battle can open its own render and judge it — no headless driver,
+ * no dependency. The images are the wide net (only eyes catch a dull shot or wrong history); the
+ * report carries only what can be stated mechanically. Output lands in _selfreview/ (gitignored).
+ * Under-matches on purpose: literal broken-value tokens, and a 4px overlap tolerance, because a
+ * detector that cries wolf teaches an agent to ignore it. */
+const SELF_TOKENS=/\b(undefined|NaN|null)\b/;
+const SELF_OVERLAP_TOL=4;                       // px; sub-pixel adjacency is normal in a flex layout
+async function selfPost(name,body,type){ try{ await fetch(`/__selfreview/${name}`,{method:"POST",headers:{"content-type":type},body}); return true; }catch(e){ return false; } }
+function selfDiagnose(){
+  const issues=[];
+  // 1) broken values rendered as text anywhere in the visible chrome
+  for(const id of ["labels","caption","hud-tl","key","title","credit"]){
+    const el=document.getElementById(id); if(!el) continue;
+    const t=(el.innerText||"").replace(/\s+/g," ").trim();
+    if(SELF_TOKENS.test(t)) issues.push({kind:"broken-value",where:`#${id}`,detail:t.match(SELF_TOKENS)[0],hint:"a data field is missing or mistyped; the engine rendered the raw value"});
+  }
+  // 2) storyboard focus ids that match no unit — director.js looks each up and SILENTLY skips a miss
+  const ids=new Set((D.units||[]).map(u=>u.id));
+  (D.storyboard||[]).forEach((sh,i)=>(sh.focus||[]).forEach(f=>{ if(!ids.has(f)) issues.push({kind:"dead-focus",where:`storyboard[${i}].focus`,detail:f,hint:"no unit has this id, so the shot centres on nothing"}); }));
+  // 3) shots outside the battle clock
+  (D.storyboard||[]).forEach((sh,i)=>{ if(sh.day<D.meta.dayMin||sh.day>D.meta.dayMax) issues.push({kind:"shot-off-clock",where:`storyboard[${i}].day`,detail:sh.day,hint:`outside meta.dayMin..dayMax (${D.meta.dayMin}..${D.meta.dayMax})`}); });
+  // 4) HUD panels colliding at this viewport
+  const boxes=["hud-tl","key","caption","credit"].map(id=>[id,document.getElementById(id)]).filter(([,e])=>e&&e.offsetParent!==null).map(([id,e])=>[id,e.getBoundingClientRect()]);
+  for(let a=0;a<boxes.length;a++) for(let b=a+1;b<boxes.length;b++){
+    const [ia,ra]=boxes[a], [ib,rb]=boxes[b];
+    const ox=Math.min(ra.right,rb.right)-Math.max(ra.left,rb.left), oy=Math.min(ra.bottom,rb.bottom)-Math.max(ra.top,rb.top);
+    if(ox>SELF_OVERLAP_TOL&&oy>SELF_OVERLAP_TOL) issues.push({kind:"panel-overlap",where:`#${ia} vs #${ib}`,detail:`${Math.round(ox)}x${Math.round(oy)}px`,hint:"the HUD collides at this viewport size"});
+  }
+  return issues;
+}
+async function selfReview(){
+  const n=Director.shots.length, shots=[];
+  for(let i=0;i<n;i++){
+    window.__capture.seekToShot(i);
+    const blob=await (await fetch(compositeCapture(true))).blob();
+    await selfPost(`shot-${String(i).padStart(2,"0")}.jpg`,blob,"image/jpeg");
+    const sh=Director.shots[i];
+    shots.push({shot:i,day:+Clock.day.toFixed(2),title:sh.title_en||sh.title_zh,file:`shot-${String(i).padStart(2,"0")}.jpg`});
+  }
+  const issues=selfDiagnose();
+  const report={battle:D.meta.title,shots:n,viewport:{w:innerWidth,h:innerHeight},frames:shots,issues,
+    note:"Frames are for YOUR eyes: open them and judge framing, legibility and whether the story reads. `issues` lists only what can be checked mechanically; an empty list does not mean the battle is good."};
+  await selfPost("report.json",JSON.stringify(report,null,2),"application/json");
+  await selfPost("done.json",JSON.stringify({ok:true,shots:n,issues:issues.length},null,2),"application/json");
+  console.log(`self-review complete: ${n} frames, ${issues.length} issue(s) -> _selfreview/`);
 }
 
 /* ===================== ASYNC INIT ================================= */
@@ -191,6 +240,7 @@ function injectBattleStyles(){
     Director.start(); updatePlayBtn(); kickMusic();   // start the MUTED, in-sync soundtrack timeline (muted autoplay is gesture-exempt; silent). Audible sound requires a deliberate music-button click.
     bootMsg(D.ui.boot.starting); renderScene(); animate();
     if(window.__capture){ for(let k=0;k<60;k++) frame(1/30); renderScene(); captureFrozen=true; }   // capture mode: settle on the first shot and hold (the headless driver then seeks/steps deterministically)
+    if(window.__capture && /[?&]selfreview=1\b/.test(location.search)) selfReview();   // ...and in self-review mode, drive the whole tour ourselves and post the frames + report (no external driver needed)
     setTimeout(()=>{ const b=document.getElementById("boot"); if(b) b.classList.add("gone"); }, 600);
   }catch(e){ fatal(e); }
 })();

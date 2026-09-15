@@ -85,11 +85,19 @@ Edit only the **battle layer**; never the engine.
 7. **Validate — constantly.** Run `node tools/validate.mjs` after each authoring pass. It checks `data.js` against the
    exact contract the engine enforces at boot and **names the first wrong or missing field** — no browser, no tiles
    needed. Iterate until it prints `OK ... valid`. This is your tight inner loop.
-8. **Serve for the human to review.** `node tools/serve.js` runs a local server at <http://localhost:5050> (http, not
-   `file://`). It is long-running and does not exit, so start it in the background; never block the agent waiting on it.
-   The human then plays the tour and checks what the CLI cannot: units move the right way, the front line and arrows
-   make sense, captions and dates align, the camera framing is cinematic and close, nothing reads "undefined". Fix in
-   `data.js`, re-validate, reload.
+8. **Review your own render. This is yours, not the human's.** `node tools/serve.js` runs a local server at
+   <http://localhost:5050> (http, not `file://`). It is long-running and does not exit, so start it in the background.
+   Then open **`http://localhost:5050/?capture=1&selfreview=1`** once, in whatever browser you have. The app renders
+   every storyboard shot itself and writes to `_selfreview/`:
+   - `shot-00.jpg`, `shot-01.jpg`, … one composited frame per shot, HUD and caption included;
+   - `report.json` with the defects that can be checked mechanically (values rendering as `undefined`/`NaN`/`null`,
+     `storyboard[].focus` ids matching no unit, shots outside the battle clock, HUD panels colliding);
+   - `done.json`, written last, so you know it finished. Wait for that file rather than guessing at timing.
+
+   **Then open the images and look at them.** The report cannot tell you whether the camera framing is cinematic,
+   whether the front line reads correctly, whether the narration lands, or whether a shot is dull. You can, by
+   looking. An empty `issues` list does not mean the battle is good. Fix `data.js`, re-validate, re-run, until the
+   frames are something you would put your name on. No external driver and nothing to install.
 9. **Capture** a still for the README / `og:image`. The **P** key saves a quick still of the 3D scene only (the HUD and
    labels are DOM, not in the canvas). For the composited HUD + caption the convention assets want (and on the agent
    path, where there is no screen to record), serve the app and open it with `?capture=1`: that exposes a small
