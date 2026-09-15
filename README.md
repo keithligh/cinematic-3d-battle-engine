@@ -59,10 +59,9 @@ work: it researches the history, writes the data, draws the period flags, sets t
 fact-check; the agent builds.** That is the whole idea: a finished 3D documentary of any battle without you ever
 touching the engine.
 
-A ready starting prompt ships right here in the repo: **[PROMPT.md](PROMPT.md)**. (The
-[Battle of Hong Kong](https://github.com/keithligh/battle-of-hong-kong-1941) began the same way, from its own
-[PROMPT.md](https://github.com/keithligh/battle-of-hong-kong-1941/blob/main/PROMPT.md).) The agent's full runbook is
-**[AGENTS.md](AGENTS.md)**, and the field reference it follows is **[PLAYBOOK.md](PLAYBOOK.md)**.
+A ready starting prompt ships right here in the repo: **[PROMPT.md](PROMPT.md)**. The agent's full runbook is
+**[AGENTS.md](AGENTS.md)**, and the field reference it follows is **[PLAYBOOK.md](PLAYBOOK.md)**. Everything the
+agent needs is in this repository; it never has to read another one.
 
 ## Quick start
 

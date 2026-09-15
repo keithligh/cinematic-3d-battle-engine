@@ -24,8 +24,6 @@ node tools/validate.mjs after every pass; it exits and names the first wrong fie
 and upper-left credits) as good will; add your own name alongside it rather than removing it.
 ```
 
-For reference, the [Battle of Hong Kong](https://github.com/keithligh/battle-of-hong-kong-1941) documentary was built
-from a single from-scratch brief, shipped there as
-[PROMPT.md](https://github.com/keithligh/battle-of-hong-kong-1941/blob/main/PROMPT.md), before this engine existed. It
-shows the ambition and the level of spec that produces a result like the showcases. With the engine you fork instead,
-which is why the brief above is shorter.
+The brief above is short because the engine already exists: you are authoring a battle, not building a renderer. Spend
+the length you save on the history instead, since the research and the narration are what make the result worth
+watching.

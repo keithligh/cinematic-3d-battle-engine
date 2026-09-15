@@ -9,7 +9,8 @@
  *  The placeholder "blue"/"red" flags below are deliberately ABSTRACT and fictional.
  *  Replace them with YOUR forces' real, PERIOD-CORRECT flags (e.g. a 1941 ensign,
  *  not the modern flag), and NEVER a prohibited symbol. The PRIMITIVES below compose
- *  most real national flags (tricolours, crosses, roundels, stars).
+ *  most real national flags: tricolours, upright and diagonal crosses, roundels,
+ *  stars and sunbursts. Everything you need is here; you never need another repo.
  * ===================================================================== */
 import { FAC } from "./config.js";   // only the unknown-flag fallback needs it; the painters are pure (per-battle) art
 const W = 230, H = 150;
@@ -27,12 +28,22 @@ const tri   = (c, x, y, r, color) => { c.fillStyle = color; c.beginPath();    //
   c.moveTo(x, y - r); c.lineTo(x + r * 0.92, y + r * 0.72); c.lineTo(x - r * 0.92, y + r * 0.72); c.closePath(); c.fill(); };
 const rhomb = (c, x, y, r, color) => { c.fillStyle = color; c.beginPath();    // a solid diamond (rotated square)
   c.moveTo(x, y - r); c.lineTo(x + r * 0.82, y); c.lineTo(x, y + r); c.lineTo(x - r * 0.82, y); c.closePath(); c.fill(); };
+const rays  = (c, x, y, n, color) => { c.fillStyle = color; const R = W + H;   // n wedges radiating from a point (sunburst)
+  for (let i = 0; i < n; i++) { const a = Math.PI * 2 * i / n, w = Math.PI / n * 0.5; c.beginPath(); c.moveTo(x, y);
+    c.lineTo(x + Math.cos(a - w) * R, y + Math.sin(a - w) * R); c.lineTo(x + Math.cos(a + w) * R, y + Math.sin(a + w) * R); c.closePath(); c.fill(); } };
+const saltire = (c, t, color) => { c.strokeStyle = color; c.lineWidth = t; c.beginPath();  // the diagonal cross (St Andrew / St Patrick)
+  c.moveTo(0, 0); c.lineTo(W, H); c.moveTo(W, 0); c.lineTo(0, H); c.stroke(); };
 
 /* ---- placeholder flags (ids referenced from data.example.js). Replace with YOUR forces' real flags.
  *  Composition ideas for real national flags, in the same style:
  *    tricolour: (c)=> bands(c, ["#0055A4","#ffffff","#EF4135"], true)        // vertical bands
  *    crossflag: (c)=>{ fill(c,"#ffffff"); c.fillStyle="#c8102e"; c.fillRect(W/2-13,0,26,H); c.fillRect(0,H/2-13,W,26); } // upright cross
- *    canton:    (c)=>{ fill(c,"#012169"); c.save(); c.beginPath(); c.rect(0,0,W*0.5,H*0.5); c.clip(); star(c,W*0.25,H*0.25,16,5,"#fff"); c.restore(); } */
+ *    canton:    (c)=>{ fill(c,"#012169"); c.save(); c.beginPath(); c.rect(0,0,W*0.5,H*0.5); c.clip(); star(c,W*0.25,H*0.25,16,5,"#fff"); c.restore(); }
+ *    sunburst:  (c)=>{ fill(c,"#fff"); rays(c,W/2,H/2,16,"#bc002d"); disc(c,W/2,H/2,H*0.22,"#bc002d"); }   // a 16-ray rising sun
+ *    unionish:  (c)=>{ fill(c,"#012169"); saltire(c,26,"#fff"); saltire(c,10,"#c8102e");                    // diagonals, then the upright cross
+ *                      c.fillStyle="#fff"; c.fillRect(W/2-21,0,42,H); c.fillRect(0,H/2-21,W,42);
+ *                      c.fillStyle="#c8102e"; c.fillRect(W/2-13,0,26,H); c.fillRect(0,H/2-13,W,26); }       // a period Union Flag
+ *  Use the correct flag for the YEAR of your battle, not the modern one. */
 const flags = {
   // ABSTRACT, fictional placeholders (NOT any real flag). Replace with your real period flags.
   blue: (c) => { fill(c, "#1f4f9e"); tri(c,   W * 0.5, H * 0.54, H * 0.32, "#f1f1ea"); },

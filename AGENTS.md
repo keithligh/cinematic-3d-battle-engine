@@ -65,10 +65,10 @@ Edit only the **battle layer**; never the engine.
    the field schema in **PLAYBOOK.md**. The bilingual slots: `_zh` = your **primary / local language** (any script — set
    `meta.fonts` and `meta.dir:"rtl"` for non-Latin or right-to-left), `_en` = the **secondary** language (usually
    English). Units move along their `track` keyframes `{d,lng,lat,s,st}` — there is no flat position/strength field.
-5. **Author `flags.js`.** Copy `flags.example.js` → `flags.js` — it ships reusable canvas primitives (`bands`, `disc`,
-   `star`) and two worked example flags. Compose each faction's period-correct flag from the primitives; for richer real-flag painters (a period Union Flag, a
-   16-ray Rising Sun, and more) see the Battle of Hong Kong repo's `flags.js` at
-   https://github.com/keithligh/battle-of-hong-kong-1941/blob/main/flags.js.
+5. **Author `flags.js`.** Copy `flags.example.js` → `flags.js`. It ships reusable canvas primitives (`bands`, `disc`,
+   `star`, `tri`, `rhomb`, `rays`, `saltire`) and two worked example flags, plus composition recipes in its header
+   comment for a tricolour, an upright cross, a canton, a 16-ray sunburst and a Union-style diagonal cross. Compose
+   each faction's flag from those: everything you need ships with the engine, and you never need another repository.
    Use the correct historical flag for the period (a 1941 ensign, not the modern flag), and never a prohibited symbol.
 6. **Edit `index.html`** — only the `<title>` and the `og:`/social meta (the page's head metadata). The on-screen title,
    the legend, the auto-play hint, the boot splash and the imagery disclaimer are all **data-driven** — author them in
