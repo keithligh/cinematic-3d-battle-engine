@@ -10,7 +10,7 @@
  *  (Loaded as <script type="module">; the vendored THREE libs + data.js are
  *  classic <script>s above it, so global THREE / BATTLE_DATA exist at eval.)
  * ===================================================================== */
-import { CFG, D, FAC, fatal, bootMsg } from "./config.js";
+import { CFG, D, FAC, fatal, bootMsg, sameLang } from "./config.js";
 import { Clock, Time, unitById } from "./state.js";
 import { scene, camera, renderer, labelRenderer, controls } from "./core.js";
 import { loadTiles, buildTerrain, buildLabels, buildLine, updateLines, updateFront,
@@ -150,7 +150,21 @@ function selfDiagnose(){
   (D.storyboard||[]).forEach((sh,i)=>(sh.focus||[]).forEach(f=>{ if(!ids.has(f)) issues.push({kind:"dead-focus",where:`storyboard[${i}].focus`,detail:f,hint:"no unit has this id, so the shot centres on nothing"}); }));
   // 3) shots outside the battle clock
   (D.storyboard||[]).forEach((sh,i)=>{ if(sh.day<D.meta.dayMin||sh.day>D.meta.dayMax) issues.push({kind:"shot-off-clock",where:`storyboard[${i}].day`,detail:sh.day,hint:`outside meta.dayMin..dayMax (${D.meta.dayMin}..${D.meta.dayMax})`}); });
-  // 4) HUD panels colliding at this viewport
+  // 4) the two language slots used INCONSISTENTLY. Identical slots render once (config.js sameLang,
+  //    11 render sites); different slots render BOTH, which is what a bilingual battle wants. Writing a
+  //    short name in one and a full name in the other silently doubles the legend. We cannot tell a
+  //    single-language battle from a bilingual one without guessing at scripts, so we only report what is
+  //    PROVABLE: some pairs identical and others not, within one battle, which the author cannot have
+  //    meant either way. The case where every pair differs is left to the `chrome` field below, where the
+  //    agent reads its own rendered legend and sees the doubling for itself.
+  const pairs=[];
+  for(const k of Object.keys(D.factions||{})) { const f=D.factions[k]; if(f&&f.name_zh!=null&&f.name_en!=null) pairs.push([`factions.${k}`,f.name_zh,f.name_en]); }
+  ((D.geography||{}).lines||[]).forEach((ln,i)=>{ if(ln&&ln.name_zh!=null&&ln.name_en!=null) pairs.push([`geography.lines[${i}]`,ln.name_zh,ln.name_en]); });
+  const same=pairs.filter(([,a,b])=>sameLang(a,b)), differ=pairs.filter(([,a,b])=>!sameLang(a,b));
+  if(same.length && differ.length) for(const [where,a,b] of differ)
+    issues.push({kind:"mixed-language-slots",where,detail:`"${a}" / "${b}"`,
+      hint:`this renders BOTH slots ("${a} ${b}"), while ${same.length} other name(s) in this battle set the two slots identically and render once. Make them consistent: identical for a single-language battle, different only if the battle is genuinely bilingual`});
+  // 5) HUD panels colliding at this viewport
   const boxes=["hud-tl","key","caption","credit"].map(id=>[id,document.getElementById(id)]).filter(([,e])=>e&&e.offsetParent!==null).map(([id,e])=>[id,e.getBoundingClientRect()]);
   for(let a=0;a<boxes.length;a++) for(let b=a+1;b<boxes.length;b++){
     const [ia,ra]=boxes[a], [ib,rb]=boxes[b];
@@ -158,6 +172,14 @@ function selfDiagnose(){
     if(ox>SELF_OVERLAP_TOL&&oy>SELF_OVERLAP_TOL) issues.push({kind:"panel-overlap",where:`#${ia} vs #${ib}`,detail:`${Math.round(ox)}x${Math.round(oy)}px`,hint:"the HUD collides at this viewport size"});
   }
   return issues;
+}
+/* What the HUD actually renders, verbatim. Facts, not a heuristic: it cannot false-positive, and it
+ * catches wrong chrome no detector anticipated. Every lookup is guarded; a missing element reads "". */
+function readChrome(){
+  const txt=el=>el?(el.innerText||"").replace(/\s+/g," ").trim():"";
+  const key=document.getElementById("key");
+  return { title:txt(document.querySelector("#title h1")), subtitle:txt(document.querySelector("#title .sub")),
+    legend:key?[...key.querySelectorAll(".row")].map(r=>txt(r)).filter(Boolean):[] };
 }
 async function selfReview(){
   const n=Director.shots.length, shots=[];
@@ -169,8 +191,8 @@ async function selfReview(){
     shots.push({shot:i,day:+Clock.day.toFixed(2),title:sh.title_en||sh.title_zh,file:`shot-${String(i).padStart(2,"0")}.jpg`});
   }
   const issues=selfDiagnose();
-  const report={battle:D.meta.title,shots:n,viewport:{w:innerWidth,h:innerHeight},frames:shots,issues,
-    note:"Frames are for YOUR eyes: open them and judge framing, legibility and whether the story reads. `issues` lists only what can be checked mechanically; an empty list does not mean the battle is good."};
+  const report={battle:D.meta.title,shots:n,viewport:{w:innerWidth,h:innerHeight},frames:shots,issues,chrome:readChrome(),
+    note:"Frames are for YOUR eyes: open them and judge framing, legibility and whether the story reads. `chrome` is what your HUD ACTUALLY says, verbatim: read it for doubled or wrong text. `issues` lists only what can be checked mechanically; an empty list does not mean the battle is good."};
   await selfPost("report.json",JSON.stringify(report,null,2),"application/json");
   await selfPost("done.json",JSON.stringify({ok:true,shots:n,issues:issues.length},null,2),"application/json");
   console.log(`self-review complete: ${n} frames, ${issues.length} issue(s) -> _selfreview/`);

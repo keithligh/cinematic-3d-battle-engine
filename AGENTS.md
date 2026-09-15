@@ -110,6 +110,7 @@ Edit only the **battle layer**; never the engine.
 
 ## Languages, direction, fonts, look (all data-only, in `meta`)
 
+- **Identical slots print once; different slots print both.** For a **single-language** battle set `name_zh` and `name_en` to the **same text**. Different text is read as a bilingual pair and both are rendered side by side, so a short name in one slot and a full name in the other gives you a legend reading "1st Airborne British 1st Airborne". Applies to `factions[].name_*` and `geography.lines[].name_*`. The self-review reports your rendered legend verbatim, and flags the slots if you use them inconsistently.
 - **Bilingual by design:** one primary (`_zh`) + one secondary (`_en`) narration language, any two scripts. This is the
   product, not a limit — do not try to bolt on a third language.
 - `meta.dir:"rtl"` flows the primary-script text right-to-left (Arabic/Hebrew).

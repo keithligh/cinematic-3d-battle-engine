@@ -25,7 +25,18 @@ window.BATTLE_DATA = (function () {
   /* -- the two sides. The faction <key> ("blue"/"red") becomes a CSS variable
    *    (--fac-<key>) and a class; keep it a simple lowercase identifier.
    *    role drives attacker/defender behaviour (front/retreat colour, the strength
-   *    bars, the progress gradient). N sides are allowed — add more keys. -------- */
+   *    bars, the progress gradient). N sides are allowed — add more keys.
+   *
+   *    THE TWO NAME SLOTS, and the one mistake everybody makes: name_zh and name_en
+   *    are the PRIMARY and SECONDARY language. Set them to the SAME text (as below)
+   *    and the engine prints the name ONCE. Set them to DIFFERENT text and it prints
+   *    BOTH, side by side, which is what a genuinely bilingual battle wants.
+   *    So for a SINGLE-language battle they must be IDENTICAL. Putting a short name
+   *    in one and a full name in the other ("1st Airborne" / "British 1st Airborne")
+   *    is not a nickname, it is a bilingual pair, and the legend will read
+   *    "1st Airborne British 1st Airborne". Same rule for geography.lines names.
+   *    The self-review (?capture=1&selfreview=1) reports your rendered legend text
+   *    verbatim, so you can see exactly what it says. ------------------------------ */
   const factions = {
     blue: { main:0x3b7be2, glow:0x5aa0ff, dim:0x1f3f7a, css:"#3b7be2", name_zh:"Blue Force", name_en:"Blue Force", role:"attacker", maxStrength:5000, defaultFlag:"blue" },
     red:  { main:0xe23b3b, glow:0xff6a5a, dim:0x7a1f1f, css:"#e23b3b", name_zh:"Red Force",  name_en:"Red Force",  role:"defender",  maxStrength:5000, defaultFlag:"red"  },
