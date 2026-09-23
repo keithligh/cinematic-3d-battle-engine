@@ -1,3 +1,11 @@
+# Check every text file out with LF, on every platform. Without this, git's default
+# core.autocrlf=true on Windows rewrites the whole tree to CRLF at clone time, and
+# start.sh then fails under a Unix shell ("bad interpreter") for anyone who clones on
+# Windows and runs on Mac, Linux or WSL. The repository already stores LF, so this
+# changes the checkout direction only: no file content changes. text=auto leaves the
+# binaries in docs/ alone by content detection rather than by a list that would rot.
+* text=auto eol=lf
+
 # Vendored third-party JavaScript (Three.js + its example helpers): exclude from
 # GitHub's language statistics so the language bar reflects this project's own code.
 lib/*.js linguist-vendored
