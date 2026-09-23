@@ -252,7 +252,9 @@ function injectBattleStyles(){
     injectBattleStyles();   // all colours, fonts + reading direction come from the data layer — index.html names no battle
     buildChrome();          // paint the HUD chrome (title, boot, legend, hint, disclaimer…) from data — before loadTiles so the boot splash shows the battle's name
     renderer.domElement.setAttribute("role","img");
-    renderer.domElement.setAttribute("aria-label", D.meta.title+" · "+D.meta.subtitle+" — interactive 3D battle map");
+    // the battle's own name plus a description of the canvas — the description from D.ui too, or a localized battle
+    // would name itself in its own script and then describe itself in English
+    renderer.domElement.setAttribute("aria-label", D.meta.title+" · "+D.meta.subtitle+" — "+D.ui.a11y.map);
     await loadTiles();
     buildTerrain(); buildLabels(); buildLine(); buildRain();
     D.units.forEach(buildUnit); D.arrows.forEach(buildArrow);

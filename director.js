@@ -39,6 +39,12 @@ function shotTarget(sh){ let x=0,y=0,z=0,n=0;
 
 /* ---- captions (lower-third) ---- */
 const $=id=>document.getElementById(id);
+// One control's name, in both places a name is read: the tooltip a sighted user hovers and the label a
+// screen reader speaks. Fed from D.ui.a11y, so a localized battle is localized to a blind visitor too.
+const setName=(el,s)=>{ if(el&&s!=null){ el.title=s; el.setAttribute("aria-label",s); } };
+// One chapter, named once: the tooltip on a timeline tick and the value a screen reader reads off the scrubber.
+const chapterText=sh=>sh.dateLabel+" · "+sh.title_zh;
+let spokenShot=null;              // the chapter last written to the scrubber's aria value (see updateProgress)
 function showCap(){ $("caption").classList.add("show"); }
 function hideCap(){ $("caption").classList.remove("show"); }
 let narrLang="both";              // caption narration language: "both" | "zh" | "en"
@@ -120,7 +126,11 @@ export const Director = {
 };
 
 /* ===================== MINIMAL UI (no control panel) ============= */
-export function updatePlayBtn(){ $("play").textContent = Director.mode==="outro" ? "↻" : (Director.playing?"⏸":"▶"); }
+// The glyph and the spoken name are picked by ONE branch, so the three states cannot drift apart again
+// (the name used to be a fixed "Play / pause", which was simply wrong in the replay state).
+export function updatePlayBtn(){ const A=D.ui.a11y, out=Director.mode==="outro", b=$("play");
+  b.textContent = out ? "↻" : (Director.playing?"⏸":"▶");
+  setName(b, out ? A.replay : (Director.playing?A.pause:A.play)); }
 function sceneLabel(){   // the running time chip. Default: year.month.day (the day taken from the clock). A fork may set ui.sceneLabel to false (hide it) or to a string with {year}/{month}/{day} tokens (e.g. a static "U.C. 0079.11.30" for a non-calendar timeline; the per-shot dateLabel carries the real date).
   const sl=D.ui.sceneLabel, mm=String(D.meta.month).padStart(2,"0"), dd=String(Math.min(D.meta.lastDay,Math.floor(Clock.day))).padStart(2,"0");
   if(sl===false) return "";
@@ -131,6 +141,13 @@ function updateProgress(){ const N=Director.shots.length; let f=0;
   if(Director.mode==="play"){ const sh=Director.shots[Director.i]; f=(Director.i+clamp(Director.t/(CFG.TWEEN+sh.hold),0,1))/N; }
   else if(Director.mode==="outro") f=1;
   $("prog").firstChild.style.width=(f*100)+"%";
+  // The same position, spoken. Written only when the CHAPTER changes, not every frame: a screen reader
+  // re-announces a slider whose value attribute is touched, and 60 announcements a second is unusable.
+  const out=Director.mode==="outro", i=out?N-1:(Director.mode==="play"?Director.i:0);
+  const spoken=out?"end":i;   // the outro sits on the LAST shot's index, so the mode is part of the key or the end is never announced
+  if(spoken!==spokenShot && i>=0){ spokenShot=spoken; const p=$("prog"), A=D.ui.a11y;
+    p.setAttribute("aria-valuenow",i); p.setAttribute("aria-valuemax",N-1);
+    p.setAttribute("aria-valuetext", out ? D.ui.endLabel : `${A.chapter} ${i+1}/${N} · ${chapterText(Director.shots[i])}`); }
   $("scene-label").textContent = Director.mode==="outro" ? D.ui.endLabel
     : (Director.mode==="play" ? sceneLabel() : ""); }
 /* ---- buildChrome(): paint the static HUD chrome from data, so a fork reskins by editing data ONLY.
@@ -143,8 +160,15 @@ export function buildChrome(){
   const ui=D.ui, name=D.meta.title, sub=D.meta.subtitle;
   txt("#title h1", name); txt("#title .sub", sub);                  // on-screen title
   txt("#boot .bt", name);  txt("#boot .bs", sub);                   // boot splash (painted before the tile load)
-  const nb=$("notes-btn"); if(nb){ nb.textContent=ui.notesBtn; nb.setAttribute("aria-label", ui.notesBtn); }
+  // the spoken names, from ui.a11y — index.html hardcodes none of them (tools/check-agnostic.mjs enforces that).
+  // The play button and the music button name themselves per state instead, in updatePlayBtn / paintMusic.
+  const A=ui.a11y;
+  const nb=$("notes-btn"); if(nb){ nb.textContent=ui.notesBtn; nb.setAttribute("aria-label", ui.notesBtn); nb.setAttribute("aria-expanded","false"); }
   const lb=$("lang-btn");  if(lb) lb.textContent=ui.langToggle.both;   // initial; cycleNarrLang updates on click
+  setName(lb, A.langBtn);   // one name for a three-state cycle: data.js carries language SLOTS, not language names
+  const mb=$("music-btn"); if(mb){ setName(mb, A.music); mb.setAttribute("aria-pressed","false"); }   // honest: sound is off until a deliberate click
+  setName($("prog"), A.progress);
+  setName($("notes-close"), A.close);
   txt("#resume", ui.resume);
   txt("#notes .nhd span", ui.notesHeader);
   const hint=$("hint");    if(hint) hint.innerHTML=`<b>${ui.hint.autoplay}</b><br>${ui.hint.drag}`;
@@ -190,14 +214,18 @@ export function wireUI(){
     const t=document.createElement("span"); t.innerHTML=`${zh}`+(sameLang(zh,en)?"":` <span class="en">${en}</span>`);
     row.append(sw,t); fk.append(row); }); }
   const np=$("notes");
-  $("notes-btn").onclick=()=>np.classList.toggle("open");
-  $("notes-close").onclick=()=>np.classList.remove("open");
+  // the panel's open/closed state, spoken: the button already carries it as a class, so a reader should hear it too
+  const paintNotes=()=>$("notes-btn").setAttribute("aria-expanded", String(np.classList.contains("open")));
+  $("notes-btn").onclick=()=>{ np.classList.toggle("open"); paintNotes(); };
+  $("notes-close").onclick=()=>{ np.classList.remove("open"); paintNotes(); };
   $("lang-btn").onclick=cycleNarrLang;
   // background music (if the battle provides an <audio src>); muted autoplay, silent and in sync with the tour; a DELIBERATE click is the ONLY thing that produces sound
   const bgm=$("bgm"), musicBtn=$("music-btn"); bgm.volume=0.55; bgm.muted=true;   // muted from the start; silent until the user opts in
   const hasTrack=!!bgm.getAttribute("src");   // a battle with no <audio src> hides the music control (the player stays forward-compatible)
   let soundOn=false;   // honest default: the user has NOT opted into sound. Governs ONLY audibility (bgm.muted), never the timeline (play/pause).
-  const paintMusic=()=>{ musicBtn.textContent=soundOn?"🔊":"🔇"; musicBtn.classList.toggle("off",!soundOn); };
+  // the emoji, the class and the spoken state come off the SAME flag, so the button cannot look on and read off
+  const paintMusic=()=>{ musicBtn.textContent=soundOn?"🔊":"🔇"; musicBtn.classList.toggle("off",!soundOn);
+    musicBtn.setAttribute("aria-pressed", String(soundOn)); };
   // the MUTED timeline follows the tour's play/pause ONLY (decoupled from soundOn), so the soundtrack stays in sync for an eventual unmute.
   const syncMusic=()=>{ if(hasTrack && Director.playing){ bgm.play().catch(()=>{}); } else { bgm.pause(); } };
   // SOLE path to audible sound: a deliberate click flips mute on the already-playing muted element, inside the user gesture.
@@ -207,9 +235,16 @@ export function wireUI(){
   $("resume").onclick=()=>{ Director.resume(); syncMusic(); };
   const beats=$("prog-beats"), N=D.storyboard.length;
   D.storyboard.forEach((sh,i)=>{ const b=document.createElement("b"); b.style.left=((i+0.5)/N*100)+"%";
-    b.title=sh.dateLabel+" · "+sh.title_zh; beats.appendChild(b); });   // hover a tick to read the chapter
+    b.title=chapterText(sh); beats.appendChild(b); });   // hover a tick to read the chapter
   $("prog").addEventListener("click",e=>{ const r=$("prog").getBoundingClientRect();   // click the time axis to jump to a chapter
     const frac=clamp((e.clientX-r.left)/r.width,0,1); Director.goToShot(Math.round(frac*N-0.5)); });
+  // ...and reach the same chapters from the keyboard: the axis is a <div>, so without this it is mouse-only.
+  // Same seek call as the click above — one seek path, not two.
+  $("prog").addEventListener("keydown",e=>{ const i=Math.max(Director.i,0), k=e.key;
+    const to = k==="ArrowRight"||k==="ArrowUp" ? i+1 : k==="ArrowLeft"||k==="ArrowDown" ? i-1
+             : k==="Home" ? 0 : k==="End" ? N-1 : null;
+    if(to===null) return;
+    e.preventDefault(); Director.goToShot(to); });
   controls.addEventListener("start",()=>Director.pauseForUser());   // a user drag pauses the tour
   // auto-hide transport + hint on inactivity
   let idle; const ui=[$("controls"),$("hint")];

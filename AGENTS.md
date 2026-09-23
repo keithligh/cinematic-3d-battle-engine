@@ -120,9 +120,12 @@ Edit only the **battle layer**; never the engine.
 - `meta.theme:{ sky, sea, sun, amb, smoke, grade }` restyles the cinematic look; it is deep-merged over the engine
   default, so override only what you need (a desert, a snowfield, a summer day).
 - Any of these omitted → sensible engine defaults. Omitting `ui` makes every interface string — the title-bar buttons,
-  the legend (symbols/flags headers + the symbol labels), the auto-play hint, the notes/resume labels and the imagery
-  disclaimer — default to English. **Hidden truth:** interface text has ONE source (`meta.title`/`subtitle` + `factions[].name_*`
-  + `geography.lines[].name_*` + `ui` over `DEFAULT_UI`); the engine paints it all, so `index.html` holds no battle text.
+  the legend (symbols/flags headers + the symbol labels), the auto-play hint, the notes/resume labels, the imagery
+  disclaimer and the **screen-reader names** (`ui.a11y`) — default to English. **Hidden truth:** interface text has ONE
+  source (`meta.title`/`subtitle` + `factions[].name_*` + `geography.lines[].name_*` + `ui` over `DEFAULT_UI`); the engine
+  paints it all, **including the accessible names**, so `index.html` holds no battle text and no hardcoded label. That is
+  enforced: `tools/check-agnostic.mjs` fails if a control regains an `aria-label`/`title` in the static HTML. Translate
+  `ui.a11y` with the rest, or a fully localized battle is still read aloud in English.
 
 ---
 

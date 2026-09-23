@@ -131,6 +131,9 @@
   #play:hover{background:rgba(216,192,138,.22)}
   #prog{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.12);position:relative;cursor:pointer}
   #prog > i{display:block;height:100%;width:0;border-radius:3px;transition:width .4s linear}   /* the faction progress gradient is injected from FAC */
+  /* the scrubber is arrow-key seekable, so keyboard focus must be VISIBLE — in the HUD's own accent, not the
+     browser's default ring. :focus-visible, so a mouse click on the axis does not leave a ring behind. */
+  #prog:focus-visible{outline:1px solid var(--accent);outline-offset:4px}
   #prog .beats{position:absolute;inset:0;pointer-events:none}
   #prog .beats b{position:absolute;top:-3px;width:2px;height:11px;background:rgba(255,255,255,.34);transform:translateX(-50%);border-radius:1px;pointer-events:auto;cursor:pointer}
   #prog .beats b:hover{background:var(--accent);width:3px}
@@ -202,8 +205,8 @@
       <h1></h1>
       <div class="sub" lang="en"></div>
       <button id="notes-btn"></button>
-      <button id="lang-btn" aria-label="Toggle narration language"></button>
-      <button id="music-btn" class="off" title="Music" aria-label="Background music">🔇</button>
+      <button id="lang-btn"></button>
+      <button id="music-btn" class="off">🔇</button>
     </div>
     <div id="disclaimer"></div>
     <div id="engine-credit" lang="en">
@@ -231,15 +234,17 @@
 
   <!-- minimal transport (auto-hides) -->
   <div id="controls">
-    <button id="play" title="Play / pause" aria-label="Play / pause">⏸</button>
-    <div id="prog" role="progressbar" aria-label="Tour progress"><i></i><div class="beats" id="prog-beats"></div></div>
+    <button id="play">⏸</button>
+    <!-- a SLIDER, not a progressbar: it is clickable and arrow-key seekable (see the handlers in director.js).
+         The name and the spoken chapter value are painted from D.ui.a11y — this file hardcodes no interface text. -->
+    <div id="prog" role="slider" tabindex="0" aria-valuemin="0"><i></i><div class="beats" id="prog-beats"></div></div>
     <div id="scene-label"></div>
   </div>
 
   <div id="resume"></div>
 
   <div id="notes" class="panel">
-    <div class="nhd"><span></span><button id="notes-close" aria-label="Close">✕</button></div>
+    <div class="nhd"><span></span><button id="notes-close">✕</button></div>
     <div id="notes-body" class="nbody"></div>
   </div>
 

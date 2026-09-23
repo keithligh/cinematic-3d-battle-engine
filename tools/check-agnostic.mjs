@@ -9,7 +9,9 @@
  *      documented per-deploy branding exception);
  *    • the data-driven HUD chrome containers in index.html are EMPTY —
  *      director.js buildChrome() paints them at runtime, so any hardcoded
- *      text there is a leak (catches a Latin leak the CJK scan cannot).
+ *      text there is a leak (catches a Latin leak the CJK scan cannot);
+ *    • the named controls carry no aria-label/title — the engine paints those
+ *      from D.ui.a11y, so a localized battle is localized to a screen reader too.
  *
  *  Orthogonal to validate.js: the validator checks a battle's DATA against the
  *  contract; this checks the engine/shell SOURCE carries no battle text.
@@ -33,6 +35,11 @@ const ENGINE = ["config.js", "validate.js", "app.js", "core.js", "projection.js"
 // Listing them, rather than leaving them to the guard's silence, is what lets the check below tell
 // "deliberately not scanned" apart from "nobody noticed this file" — see the root sweep in 1b.
 const BATTLE = ["data.js", "data.example.js", "flags.js", "flags.example.js"];
+
+// The controls buildChrome()/updatePlayBtn()/paintMusic() NAME at runtime from D.ui.a11y — they must carry no
+// aria-label/title here. Interface text a screen reader hears is still interface text: hardcode it and a localized
+// fork speaks English. Matched by id, not by sweeping for aria-* (which would fire on markup nobody is painting).
+const NAMED = ["lang-btn", "music-btn", "play", "prog", "notes-close"];
 
 // The index.html containers buildChrome() owns — they must be EMPTY in the static HTML.
 const CONTAINERS = [
@@ -87,6 +94,13 @@ for (const [label, re] of CONTAINERS) {
   if (!m) fails.push(`index.html  ${label} — container not located (markup changed? update this guard)`);
   else if (m[1].trim() !== "") fails.push(`index.html  ${label} is NOT empty -> "${m[1].trim().slice(0, 60)}" (buildChrome owns it; move the text to data.js D.ui / D.meta)`);
 }
+// 2c) the named controls carry no hardcoded accessible name (the engine paints those from D.ui.a11y)
+for (const id of NAMED) {
+  const m = html.match(new RegExp(`<(?:button|div)\\s+id="${id}"([^>]*)>`));
+  if (!m) { fails.push(`index.html  #${id} — element not located (markup changed? update this guard)`); continue; }
+  const hard = m[1].match(/\b(?:aria-label|title)="[^"]*"/g) || [];
+  if (hard.length) fails.push(`index.html  #${id} hardcodes its accessible name -> ${hard.join(" ")} (a localized battle would still SPEAK English; delete it and translate ui.a11y in data.js — buildChrome paints it)`);
+}
 
 if (fails.length) {
   // The headline covers BOTH failure kinds: text that leaked in, and a file that was never checked.
@@ -94,5 +108,5 @@ if (fails.length) {
   console.error(`FAIL  the engine/shell is not provably battle-agnostic (${fails.length}):\n  - ${fails.join("\n  - ")}\n`);
   process.exit(1);
 }
-console.log("OK  engine modules + index.html body are battle-agnostic (no CJK; chrome containers empty).");
+console.log("OK  engine modules + index.html body are battle-agnostic (no CJK; chrome containers empty; controls unnamed).");
 process.exit(0);

@@ -73,8 +73,16 @@ const DEFAULT_UI = {
     movement:"Movement", combat:"Combat / fire", lost:"Lost / surrendered" },
   disclaimer:"Present-day satellite imagery — terrain/coastline may differ from the battle period.<br>"
     +"Imagery © EOX Sentinel-2 cloudless 2016 (CC BY 4.0, s2maps.eu, modified Copernicus Sentinel data) · elevation SRTM courtesy USGS",
+  // The names only a screen reader hears. Same rule as the visible chrome: index.html hardcodes none of them,
+  // buildChrome() paints them, a fork translates them here — otherwise a localized battle SPEAKS English.
+  // play/pause/replay are three separate names because the button has three states (see updatePlayBtn).
+  a11y:{ langBtn:"Toggle narration language", music:"Background music",
+    play:"Play tour", pause:"Pause tour", replay:"Replay tour",
+    progress:"Tour progress", chapter:"Chapter", close:"Close", map:"interactive 3D battle map" },
 };
-const mergeUI=(dft,o)=>{ const r={...dft,...(o||{})}; for(const k of ["boot","err","frontLine","langToggle","hint","legend"]) r[k]={...dft[k],...((o&&o[k])||{})}; return r; };
+// deep-merge the nested groups so a HALF-translated group keeps the English defaults for the rest of its keys
+// (a spread alone would replace the whole group, and the missing keys would reach the DOM as "undefined").
+const mergeUI=(dft,o)=>{ const r={...dft,...(o||{})}; for(const k of ["boot","err","frontLine","langToggle","hint","legend","a11y"]) r[k]={...dft[k],...((o&&o[k])||{})}; return r; };
 D.ui = mergeUI(DEFAULT_UI, D.ui);
 
 /* ---- engine DEFAULTS (used only when a battle declares nothing) ---- *
