@@ -20,10 +20,17 @@ const flagWaves=[]; export const unitObjs=[];
 // Unit glyphs: shared geometries built once and reused by every unit (less allocation than a token each).
 // Combat units fly an oriented "formation wedge": a notched chevron whose tip points along the unit's
 // advance vector (updateUnits sets token.rotation.y) and whose footprint scales with combat strength.
-const WEDGE_GEO=(()=>{ const s=new THREE.Shape();
-  s.moveTo(0,-1.0); s.lineTo(0.60,0.55); s.lineTo(0.22,0.30); s.lineTo(0,0.48);
-  s.lineTo(-0.22,0.30); s.lineTo(-0.60,0.55); s.closePath();          // tip at -Y, notched wings at +Y
-  const g=new THREE.ExtrudeGeometry(s,{depth:0.9, bevelEnabled:false}); // 0.9 = thin map-glyph slab
+/* THE GLYPH OUTLINES ARE THE SINGLE SOURCE. Each is a closed polyline of [x,y] pairs with the tip at -Y.
+ * They are extruded into the 3D map tokens below AND exported, so director.js can DERIVE the HUD legend
+ * symbol from the same numbers instead of carrying a hand-drawn copy. Those copies drifted once already
+ * (LegendGlyphSync, 2026-06-25: the legend's "Air" had become a chevron and its "Artillery" was the
+ * pre-redesign carriage), which is why the duplication is gone rather than merely documented.
+ * Change a coordinate here and the map glyph and the legend both follow. */
+const shapeOf=pts=>{ const s=new THREE.Shape(); pts.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y)); s.closePath(); return s; };
+
+export const WEDGE_PTS=[[0,-1.0],[0.60,0.55],[0.22,0.30],[0,0.48],[-0.22,0.30],[-0.60,0.55]];  // tip at -Y, notched wings at +Y
+const WEDGE_GEO=(()=>{
+  const g=new THREE.ExtrudeGeometry(shapeOf(WEDGE_PTS),{depth:0.9, bevelEnabled:false}); // 0.9 = thin map-glyph slab
   g.rotateX(-Math.PI/2);                          // tip → world +Z (forward), thickness → +Y (up)
   g.scale(CFG.TOKEN_R*1.25,1,CFG.TOKEN_R*1.25);   // footprint ≈ the former cylinder token
   return g; })();
@@ -31,27 +38,27 @@ const WEDGE_GEO=(()=>{ const s=new THREE.Shape();
 const CMD_GEO=new THREE.OctahedronGeometry(CFG.TOKEN_R*0.62);
 // Air units render as an aircraft aloft: a slender swept-wing silhouette (distinct from the fat infantry chevron),
 // hovering above its ground ring so it reads as in flight. Nose at shape -Y → world +Z (forward), like the wedge.
-const AIR_GEO=(()=>{ const s=new THREE.Shape();
-  s.moveTo(0,-1.25); s.lineTo(0.10,-0.15); s.lineTo(0.66,0.62); s.lineTo(0.12,0.50);   // nose → fuselage → swept wingtip → trailing root
-  s.lineTo(0.10,1.05); s.lineTo(-0.10,1.05);                                            // tailplane
-  s.lineTo(-0.12,0.50); s.lineTo(-0.66,0.62); s.lineTo(-0.10,-0.15); s.closePath();     // left mirror
-  const g=new THREE.ExtrudeGeometry(s,{depth:0.6, bevelEnabled:false});                 // a thin slab; the swept shape carries the read
+export const AIR_PTS=[
+  [0,-1.25],[0.10,-0.15],[0.66,0.62],[0.12,0.50],   // nose → fuselage → swept wingtip → trailing root
+  [0.10,1.05],[-0.10,1.05],                          // tailplane
+  [-0.12,0.50],[-0.66,0.62],[-0.10,-0.15]];          // left mirror
+const AIR_GEO=(()=>{
+  const g=new THREE.ExtrudeGeometry(shapeOf(AIR_PTS),{depth:0.6, bevelEnabled:false});   // a thin slab; the swept shape carries the read
   g.rotateX(-Math.PI/2); g.scale(CFG.TOKEN_R*1.45,1,CFG.TOKEN_R*1.45); return g; })();   // sized close to the infantry wedge (1.25) for proportion — a unit is a unit, just a different shape
 // Naval units render as a warship hull: an elongated silhouette with a pointed bow, riding at sea level.
-const NAVY_GEO=(()=>{ const s=new THREE.Shape();
-  s.moveTo(0,-1.35); s.lineTo(0.30,-0.55); s.lineTo(0.32,0.95); s.lineTo(-0.32,0.95); s.lineTo(-0.30,-0.55);  // bow → sides → squared stern
-  s.closePath();
-  const g=new THREE.ExtrudeGeometry(s,{depth:1.0, bevelEnabled:false});
+export const NAVY_PTS=[[0,-1.35],[0.30,-0.55],[0.32,0.95],[-0.32,0.95],[-0.30,-0.55]];  // bow → sides → squared stern
+const NAVY_GEO=(()=>{
+  const g=new THREE.ExtrudeGeometry(shapeOf(NAVY_PTS),{depth:1.0, bevelEnabled:false});
   g.rotateX(-Math.PI/2); g.scale(CFG.TOKEN_R*1.45,1,CFG.TOKEN_R*1.45); return g; })();
 // Artillery renders as a field gun: a SOLID rectangular body (gun + wheels — a clear mass, not a wisp) with a
 // stubby barrel projecting forward (+Z, along the heading). Kept solid + visible so it reads even as a dim
 // background unit, distinct from the pointed wedge/delta/hull.
-const ARTY_GEO=(()=>{ const s=new THREE.Shape();
-  s.moveTo(0.16,-1.45); s.lineTo(0.16,-0.5);             // barrel, right edge (muzzle forward at -1.45)
-  s.lineTo(0.52,-0.5); s.lineTo(0.52,0.85); s.lineTo(-0.52,0.85); s.lineTo(-0.52,-0.5);   // solid body (gun + wheels)
-  s.lineTo(-0.16,-0.5); s.lineTo(-0.16,-1.45);           // barrel, left edge
-  s.closePath();
-  const g=new THREE.ExtrudeGeometry(s,{depth:1.0, bevelEnabled:false});
+export const ARTY_PTS=[
+  [0.16,-1.45],[0.16,-0.5],                                      // barrel, right edge (muzzle forward at -1.45)
+  [0.52,-0.5],[0.52,0.85],[-0.52,0.85],[-0.52,-0.5],             // solid body (gun + wheels)
+  [-0.16,-0.5],[-0.16,-1.45]];                                   // barrel, left edge
+const ARTY_GEO=(()=>{
+  const g=new THREE.ExtrudeGeometry(shapeOf(ARTY_PTS),{depth:1.0, bevelEnabled:false});
   g.rotateX(-Math.PI/2); g.scale(CFG.TOKEN_R*1.55,1,CFG.TOKEN_R*1.55); return g; })();
 // state → formation footprint [frontage, depth] applied to the wedge so the shape reads per posture:
 // attack=spearhead, march=narrow column, hold=broad defensive line, retreat=dispersed.

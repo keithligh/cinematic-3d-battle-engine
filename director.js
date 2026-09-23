@@ -6,6 +6,16 @@
  *  live together here; internal cohesion, not a cross-module cycle.
  * ===================================================================== */
 import { CFG, D, FAC, clamp, lerp, easeIO, deg, REDUCE_MOTION, sameLang } from "./config.js";
+import { WEDGE_PTS, AIR_PTS, NAVY_PTS, ARTY_PTS } from "./entities.js";   // the glyph outlines: the legend symbols are derived from them, never copied
+
+/* A unit glyph outline, rendered as the 12px HUD legend symbol. The outlines live in entities.js and are
+ * extruded into the 3D map tokens; this draws the SAME numbers flat, so a glyph edit moves both and they
+ * cannot drift (they did once: LegendGlyphSync, 2026-06-25). VIEW is the existing 16x16 box, so the
+ * outline is centred at VIEW/2 and scaled by SPAN, the factor that fits every glyph inside it. */
+const VIEW=16, SPAN=5;
+const glyphSymbol=pts=>`<svg viewBox="0 0 ${VIEW} ${VIEW}" width="12" height="12" style="vertical-align:middle"><path d="`
+  + pts.map(([x,y],i)=>`${i?"L":"M"}${+(VIEW/2+x*SPAN).toFixed(4)} ${+(VIEW/2+y*SPAN).toFixed(4)}`).join(" ")
+  + ` Z" fill="currentColor"/></svg>`;
 import { camera, controls } from "./core.js";
 import { vec } from "./projection.js";
 import { Clock, setDay, lookTarget, unitById, setFocus } from "./state.js";
@@ -147,14 +157,14 @@ export function buildChrome(){
     h+=`<div class="sep"></div>`;
     h+=`<div class="row front"><span class="ln"></span><span>${ui.frontLine.zh}${sameLang(ui.frontLine.zh,ui.frontLine.en)?"":" "+ui.frontLine.en}</span></div>`;
     for(const ln of (D.geography.lines||[])) h+=`<div class="row"><span class="ln" style="color:${ln.color}"></span><span>${ln.name_zh}${sameLang(ln.name_zh,ln.name_en)?"":" "+ln.name_en}</span></div>`;
-    // the arm symbols below (infantry/air/navy/artillery) MIRROR the entities.js unit glyph Shapes (wedge/aircraft/hull/gun) — keep them in sync if a glyph's shape changes
+    // the arm symbols below are DERIVED from the entities.js glyph outlines, not copies of them: same numbers, two renderings (see glyphSymbol)
     h+=`<details class="syms"><summary>${L.symbolsHeader}</summary>`
      + `<div class="row"><span class="gl" style="color:var(--fac-${att})">➤</span><span>${L.advance}</span></div>`
-     + `<div class="row"><span class="gl">◆</span><span>${L.hq}</span></div>`
-     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><path d="M8 3 L11 10.75 L9.1 9.5 L8 10.4 L6.9 9.5 L5 10.75 Z" fill="currentColor"/></svg></span><span>${L.infantry}</span></div>`
-     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><path d="M8 1.75 L8.5 7.25 L11.3 11.1 L8.6 10.5 L8.5 13.25 L7.5 13.25 L7.4 10.5 L4.7 11.1 L7.5 7.25 Z" fill="currentColor"/></svg></span><span>${L.air}</span></div>`
-     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><path d="M8 1.25 L9.5 5.25 L9.6 12.75 L6.4 12.75 L6.5 5.25 Z" fill="currentColor"/></svg></span><span>${L.navy}</span></div>`
-     + `<div class="row"><span class="gl"><svg viewBox="0 0 16 16" width="12" height="12" style="vertical-align:middle"><path d="M8.8 0.75 L8.8 5.5 L10.6 5.5 L10.6 12.25 L5.4 12.25 L5.4 5.5 L7.2 5.5 L7.2 0.75 Z" fill="currentColor"/></svg></span><span>${L.artillery}</span></div>`
+     + `<div class="row"><span class="gl">◆</span><span>${L.hq}</span></div>`   // HQ is an OctahedronGeometry, not a Shape: no outline to derive, so it stays a text diamond
+     + `<div class="row"><span class="gl">${glyphSymbol(WEDGE_PTS)}</span><span>${L.infantry}</span></div>`
+     + `<div class="row"><span class="gl">${glyphSymbol(AIR_PTS)}</span><span>${L.air}</span></div>`
+     + `<div class="row"><span class="gl">${glyphSymbol(NAVY_PTS)}</span><span>${L.navy}</span></div>`
+     + `<div class="row"><span class="gl">${glyphSymbol(ARTY_PTS)}</span><span>${L.artillery}</span></div>`
      + `<div class="row"><span class="gl">◎</span><span>${L.contact}</span></div>`
      + `<div class="row"><span class="gl mini"><i></i></span><span>${L.strength}</span></div>`
      + `<div class="row"><span class="gl">→</span><span>${L.movement}</span></div>`
