@@ -81,7 +81,9 @@ Edit only the **battle layer**; never the engine.
    disclaimer defaults to a generic present-day-imagery note **with the required EOX/SRTM attribution** — keep that
    attribution if you use these tiles. The movie also carries a small credit to the engine and its author (the footer `#credit` and the upper-left `#engine-credit`): please honour it and leave it visible. See "Honour the credit" below.
    After editing, run `node tools/check-agnostic.mjs` — it fails (naming the spot) if any battle text leaked into an
-   engine module or the page `<body>`; only the `<head>` (`<title>` + og) may carry your battle's name.
+   engine module or the page `<body>`; only the `<head>` (`<title>` + og) may carry your battle's name. It also fails
+   if it finds a root `.js` it cannot classify, so a file it has never checked can never pass unnoticed: add yours to
+   `BATTLE` in that file if it holds your battle's content, or to `ENGINE` if it is engine code.
 7. **Validate — constantly.** Run `node tools/validate.mjs` after each authoring pass. It checks `data.js` against the
    exact contract the engine enforces at boot and **names the first wrong or missing field** — no browser, no tiles
    needed. Iterate until it prints `OK ... valid`. This is your tight inner loop.
